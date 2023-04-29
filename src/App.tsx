@@ -1,6 +1,8 @@
 import { GraphinData, Utils } from "@antv/graphin";
 import { Graph } from "./components/graph/Graph";
 import { useState } from "react";
+import { CloseOutlined } from "@ant-design/icons";
+import { Divider } from "antd";
 
 const App = () => {
   const [selectedNode, setSelectedNode] = useState<string | undefined>();
@@ -39,6 +41,11 @@ const App = () => {
     <>
       {selectedNode ? (
         <div className="absolute top-5 right-5 h-[calc(100%-40px)] text-white z-50 w-80 p-2 rounded-md bg-popup overflow-y-auto">
+          <div className="flex justify-between items-center">
+            <p className="text-lg">Selected Node</p>
+            <CloseOutlined onClick={() => setSelectedNode(undefined)} />
+          </div>
+          <Divider className="my-2 bg-[#1f1f1f]"/>
           <div className="flex flex-col gap-2">
             Node Details
             <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre">
