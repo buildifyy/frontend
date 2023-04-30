@@ -1,15 +1,89 @@
 import { CloseOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { Button, Divider } from "antd";
-import { GraphinData, Utils } from "@antv/graphin";
+import {
+  Button,
+  ConfigProvider,
+  Divider,
+  Form,
+  Input,
+  Popover,
+  Select,
+  theme,
+} from "antd";
+import { GraphinData, IUserEdge, Utils } from "@antv/graphin";
 import { Graph } from "./components/graph/Graph";
 import { useEffect, useState } from "react";
 
 const App = () => {
+  const { Option } = Select;
   const [selectedNode, setSelectedNode] = useState<string | undefined>();
-  const [initData, setInitData] = useState(Utils.mock(30).tree().graphin());
+  const [initData, setInitData] = useState<GraphinData>(
+    Utils.mock(30).tree().graphin()
+  );
+  const [openNewNodePopover, setOpenNewNodePopover] = useState<boolean>(false);
+  const [newAdded, setNewAdded] = useState<boolean>(true);
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    form.validateFields(["label"]);
+  }, [form]);
+
+  const handleCloseNodePopover = () => {
+    setOpenNewNodePopover(false);
+  };
+
+  const handleOpenNewNodePopoverChange = (newOpen: boolean) => {
+    setOpenNewNodePopover(newOpen);
+  };
 
   const handleDeselectNode = () => {
     setSelectedNode(undefined);
+  };
+
+  const handleSubmit = async () => {
+    await form.validateFields();
+
+    const newId = crypto.randomUUID().toString();
+    const newLabel = form.getFieldValue("label");
+    const newParent = form.getFieldValue("parent");
+    const newTargets = form.getFieldValue("target") as string[];
+    const newEdges: IUserEdge[] = [];
+
+    if (newParent) {
+      newEdges.push({
+        source: newParent,
+        target: newId,
+      });
+    }
+
+    if (newTargets) {
+      newTargets.forEach((targetId) => {
+        newEdges.push({
+          source: newId,
+          target: targetId,
+        });
+      });
+    }
+
+    setInitData({
+      nodes: [
+        ...initData.nodes,
+        {
+          id: newId,
+          label: newLabel,
+          type: "graphin-circle",
+          style: {
+            label: {
+              value: newLabel,
+            },
+          },
+        },
+      ],
+      edges: [...initData.edges, ...newEdges],
+    });
+
+    form.resetFields();
+    setNewAdded(true);
+    setOpenNewNodePopover(false);
   };
 
   useEffect(() => {
@@ -36,15 +110,18 @@ const App = () => {
       transformedData.edges = [...initData.edges];
 
       setInitData(transformedData);
+      setNewAdded(false);
     };
 
-    transformData();
-  }, [initData]);
+    if (newAdded) {
+      transformData();
+    }
+  }, [newAdded, initData]);
 
   return (
-    <>
+    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
       <Graph
-        data={initData ? initData : { nodes: [], edges: [] }}
+        data={initData}
         setSelectedNode={setSelectedNode}
         handleDeselectNode={handleDeselectNode}
       />
@@ -57,7 +134,7 @@ const App = () => {
           <Divider className="my-2 bg-[#1f1f1f]" />
           <div className="flex flex-col gap-2  overflow-y-auto h-[calc(100%-50px)]">
             Node Details
-            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre">
+            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre-wrap">
               {JSON.stringify(
                 initData.nodes.find((node) => node.id === selectedNode),
                 null,
@@ -84,16 +161,88 @@ const App = () => {
         </div>
       ) : null}
       <div className="absolute top-5 right-5">
-        <Button
-          type="primary"
-          icon={<PlusCircleOutlined />}
-          size={"large"}
-          className="flex items-center bg-popup"
+        <Popover
+          trigger="click"
+          title="Add Node"
+          open={openNewNodePopover}
+          onOpenChange={handleOpenNewNodePopoverChange}
+          content={
+            <Form form={form} labelCol={{ span: 6 }} className="max-w-md">
+              <Form.Item
+                label="Label"
+                name="label"
+                rules={[{ required: true, message: "Please input a label!" }]}
+                className="mb-2"
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item label="Parent" name="parent" className="mb-2">
+                <Select
+                  placeholder="Select a parent"
+                  // onChange={handleSelectParentChange}
+                  // value={newParentNode}
+                >
+                  {initData.nodes.map((node) => {
+                    return (
+                      <Option value={node.id} label={node.style?.label?.value}>
+                        {node.style?.label?.value}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Target" name="target" className="mb-2">
+                <Select
+                  mode="multiple"
+                  placeholder="Select target node/s"
+                  // onChange={handleSelectTargetChange}
+                  // value={newTargetNodes}
+                >
+                  {initData.nodes.map((node) => {
+                    return (
+                      <Option value={node.id} label={node.style?.label?.value}>
+                        {node.style?.label?.value}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+              <div className="flex justify-between mt-4">
+                <Form.Item className="mb-0">
+                  <Button
+                    type="default"
+                    className="items-end"
+                    onClick={handleCloseNodePopover}
+                  >
+                    Cancel
+                  </Button>
+                </Form.Item>
+                <Form.Item className="mb-0">
+                  <Button
+                    type="primary"
+                    className="items-end bg-[#1554ad]"
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </Button>
+                </Form.Item>
+              </div>
+            </Form>
+          }
+          overlayInnerStyle={{ backgroundColor: "#2F2F2F" }}
+          placement="leftTop"
         >
-          Add
-        </Button>
+          <Button
+            type="primary"
+            icon={<PlusCircleOutlined />}
+            size={"large"}
+            className="flex items-center bg-popup hover:bg-inherit"
+          >
+            Add
+          </Button>
+        </Popover>
       </div>
-    </>
+    </ConfigProvider>
   );
 };
 
