@@ -9,19 +9,22 @@ import {
   Select,
   theme,
 } from "antd";
-import { GraphinData, IUserEdge, Utils } from "@antv/graphin";
+import { GraphinData, IUserEdge, IUserNode } from "@antv/graphin";
 import { Graph } from "./components/graph/Graph";
 import { useEffect, useState } from "react";
 
 const App = () => {
   const { Option } = Select;
   const [selectedNode, setSelectedNode] = useState<string | undefined>();
-  const [initData, setInitData] = useState<GraphinData>(
-    Utils.mock(30).tree().graphin()
-  );
+  const [initData, setInitData] = useState<GraphinData>({
+    nodes: [],
+    edges: [],
+  });
   const [openNewNodePopover, setOpenNewNodePopover] = useState<boolean>(false);
   const [newAdded, setNewAdded] = useState<boolean>(true);
   const [form] = Form.useForm();
+  const [shouldExpand, setShouldExpand] = useState<boolean>(false);
+  const [rightClickedNode, setRightClickedNode] = useState<string>();
 
   useEffect(() => {
     form.validateFields(["label"]);
@@ -118,12 +121,90 @@ const App = () => {
     }
   }, [newAdded, initData]);
 
+  useEffect(() => {
+    const transformTemplateToNodeAndEdges = (
+      template: any,
+      nodes: IUserNode[],
+      edges: IUserEdge[]
+    ) => {
+      nodes.push({
+        id: template["id"],
+        data: template["name"],
+        style: {
+          label: {
+            value: template["name"],
+            offset: [0, 20],
+          },
+        },
+      });
+
+      const children = template["children"] as [];
+      children.forEach((child) => {
+        edges.push({
+          source: template["id"],
+          target: child["id"],
+        });
+        transformTemplateToNodeAndEdges(child, nodes, edges);
+      });
+    };
+
+    const transformData = (data: []) => {
+      const nodes: IUserNode[] = [];
+      const edges: IUserEdge[] = [];
+      data.forEach((template) => {
+        transformTemplateToNodeAndEdges(template, nodes, edges);
+      });
+      setInitData({ nodes: nodes, edges: edges });
+    };
+
+    fetch("http://localhost:5127/templates?style=tree")
+      .then((res) => res.json())
+      .then((data) => transformData(data));
+  }, []);
+
+  useEffect(() => {
+    const expandData = (templates: any[]) => {
+      const nodes: IUserNode[] = [];
+      const edges: IUserEdge[] = [];
+      templates.forEach((template) => {
+        nodes.push({
+          id: template["id"],
+          data: template["name"],
+          style: {
+            label: {
+              value: template["name"],
+              offset: [0, 20],
+            },
+          },
+        });
+        edges.push({
+          source: rightClickedNode || "",
+          target: template["id"],
+        });
+      });
+
+      setInitData({
+        nodes: [...initData.nodes, ...nodes],
+        edges: [...initData.edges, ...edges],
+      });
+    };
+
+    if (shouldExpand && rightClickedNode) {
+      fetch(`http://localhost:5127/templates/${rightClickedNode}/children`)
+        .then((res) => res.json())
+        .then((data) => expandData(data));
+      setShouldExpand(false);
+    }
+  }, [shouldExpand, rightClickedNode, initData]);
+
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
       <Graph
         data={initData}
         setSelectedNode={setSelectedNode}
         handleDeselectNode={handleDeselectNode}
+        setShouldExpand={setShouldExpand}
+        setRightClickedNode={setRightClickedNode}
       />
       {selectedNode ? (
         <div className="absolute top-20 right-5 h-[calc(100%-100px)] text-white z-50 w-80 p-2 rounded-md bg-popup">
@@ -177,14 +258,14 @@ const App = () => {
                 <Input />
               </Form.Item>
               <Form.Item label="Parent" name="parent" className="mb-2">
-                <Select
-                  placeholder="Select a parent"
-                  // onChange={handleSelectParentChange}
-                  // value={newParentNode}
-                >
+                <Select placeholder="Select a parent">
                   {initData.nodes.map((node) => {
                     return (
-                      <Option value={node.id} label={node.style?.label?.value}>
+                      <Option
+                        key={node.id}
+                        value={node.id}
+                        label={node.style?.label?.value}
+                      >
                         {node.style?.label?.value}
                       </Option>
                     );
@@ -192,15 +273,14 @@ const App = () => {
                 </Select>
               </Form.Item>
               <Form.Item label="Target" name="target" className="mb-2">
-                <Select
-                  mode="multiple"
-                  placeholder="Select target node/s"
-                  // onChange={handleSelectTargetChange}
-                  // value={newTargetNodes}
-                >
+                <Select mode="multiple" placeholder="Select target node/s">
                   {initData.nodes.map((node) => {
                     return (
-                      <Option value={node.id} label={node.style?.label?.value}>
+                      <Option
+                        key={node.id}
+                        value={node.id}
+                        label={node.style?.label?.value}
+                      >
                         {node.style?.label?.value}
                       </Option>
                     );
