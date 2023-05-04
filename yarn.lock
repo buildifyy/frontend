@@ -225,7 +225,7 @@
     "@antv/util" "^2.0.9"
     insert-css "^2.0.0"
 
-"@antv/g6@^4.7.9":
+"@antv/g6@^4.8.10":
   version "4.8.10"
   resolved "https://registry.yarnpkg.com/@antv/g6/-/g6-4.8.10.tgz#cc8fbdb6ee1c09984427e890ecf18b44cf9c14b1"
   integrity sha512-kZKB4wyukiyXoNOANErqRDJMRyWolAzVg12xm7XyJPYPVLxdAwYskTGnxgtxYdIjXF9qwpAszyJSLE8fZc72OA==
@@ -245,11 +245,11 @@
   integrity sha512-2nogK6ZrDklnfIOJrqOAgD7iFLjfZIjLbA8pDUbeXN5c9b0Mu84oCfyqg8OmWwvi9Gt80eUzoplo73gKjZECJg==
 
 "@antv/graphin@^2.7.15":
-  version "2.7.15"
-  resolved "https://registry.yarnpkg.com/@antv/graphin/-/graphin-2.7.15.tgz#d2684e7203993395871d2d6302e02c1f9e047a27"
-  integrity sha512-LJEYyGXkVNv9wQPysPl9kdH52d0MgEwu79bS1vsxOHXJ/sW6lWxcNR02ITiPWIOHWsZx4jmhlDxgUHwTtJFRKw==
+  version "2.7.16"
+  resolved "https://registry.yarnpkg.com/@antv/graphin/-/graphin-2.7.16.tgz#1b96543c647230cdd98b5b15e6fef0d51726a0b9"
+  integrity sha512-tS3Dk/9I1jef/qQ92a13kQQvP5Cow2qUl53/GNC8vpImvn8IoOjoZI0EqSlVEFudfgfD7BCYdo8Qp6l+ScdHzQ==
   dependencies:
-    "@antv/g6" "^4.7.9"
+    "@antv/g6" "^4.8.10"
     "@antv/util" "^2.0.10"
     "@types/lodash.clonedeep" "^4.5.6"
     d3-quadtree "^3.0.1"

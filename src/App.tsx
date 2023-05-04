@@ -23,8 +23,7 @@ const App = () => {
   const [openNewNodePopover, setOpenNewNodePopover] = useState<boolean>(false);
   const [newAdded, setNewAdded] = useState<boolean>(true);
   const [form] = Form.useForm();
-  const [shouldExpand, setShouldExpand] = useState<boolean>(false);
-  const [rightClickedNode, setRightClickedNode] = useState<string>();
+  const [nodeToExpand, setNodeToExpand] = useState<string>();
 
   useEffect(() => {
     form.validateFields(["label"]);
@@ -178,7 +177,7 @@ const App = () => {
           },
         });
         edges.push({
-          source: rightClickedNode || "",
+          source: nodeToExpand || "",
           target: template["id"],
         });
       });
@@ -189,13 +188,13 @@ const App = () => {
       });
     };
 
-    if (shouldExpand && rightClickedNode) {
-      fetch(`http://localhost:5127/templates/${rightClickedNode}/children`)
+    if (nodeToExpand) {
+      fetch(`http://localhost:5127/templates/${nodeToExpand}/children`)
         .then((res) => res.json())
         .then((data) => expandData(data));
-      setShouldExpand(false);
+      setNodeToExpand(undefined);
     }
-  }, [shouldExpand, rightClickedNode, initData]);
+  }, [nodeToExpand, initData]);
 
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
@@ -203,8 +202,7 @@ const App = () => {
         data={initData}
         setSelectedNode={setSelectedNode}
         handleDeselectNode={handleDeselectNode}
-        setShouldExpand={setShouldExpand}
-        setRightClickedNode={setRightClickedNode}
+        setNodeToExpand={setNodeToExpand}
       />
       {selectedNode ? (
         <div className="absolute top-20 right-5 h-[calc(100%-100px)] text-white z-50 w-80 p-2 rounded-md bg-popup">
