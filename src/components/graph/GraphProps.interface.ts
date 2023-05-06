@@ -5,4 +5,5 @@ export interface GraphProps {
   readonly setSelectedNode: (val: string) => void;
   readonly handleDeselectNode: () => void;
   readonly setNodeToExpand: (val: string) => void;
+  readonly setNodeToHide: (val: string) => void;
 }

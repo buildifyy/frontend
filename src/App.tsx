@@ -24,6 +24,7 @@ const App = () => {
   const [newAdded, setNewAdded] = useState<boolean>(true);
   const [form] = Form.useForm();
   const [nodeToExpand, setNodeToExpand] = useState<string>();
+  const [nodeToHide, setNodeToHide] = useState<string>();
 
   useEffect(() => {
     form.validateFields(["label"]);
@@ -196,6 +197,23 @@ const App = () => {
     }
   }, [nodeToExpand, initData]);
 
+  useEffect(() => {
+    if (nodeToHide) {
+      const allNodes = [...initData.nodes];
+      const allEdges = [...initData.edges];
+      const updatedNodes = allNodes.filter((node) => node.id !== nodeToHide);
+      const updatedEdges = allEdges.filter(
+        (edge) => edge.source !== nodeToHide && edge.target !== nodeToHide
+      );
+
+      setInitData({
+        nodes: [...updatedNodes],
+        edges: [...updatedEdges],
+      });
+      setNodeToHide(undefined);
+    }
+  }, [nodeToHide, initData]);
+
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
       <Graph
@@ -203,6 +221,7 @@ const App = () => {
         setSelectedNode={setSelectedNode}
         handleDeselectNode={handleDeselectNode}
         setNodeToExpand={setNodeToExpand}
+        setNodeToHide={setNodeToHide}
       />
       {selectedNode ? (
         <div className="absolute top-20 right-5 h-[calc(100%-100px)] text-white z-50 w-80 p-2 rounded-md bg-popup">
