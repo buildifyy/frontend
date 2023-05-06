@@ -167,16 +167,20 @@ const App = () => {
       const nodes: IUserNode[] = [];
       const edges: IUserEdge[] = [];
       templates.forEach((template) => {
-        nodes.push({
-          id: template["id"],
-          data: template["name"],
-          style: {
-            label: {
-              value: template["name"],
-              offset: [0, 20],
+        if (
+          initData.nodes.findIndex((node) => node.id === template["id"]) === -1
+        ) {
+          nodes.push({
+            id: template["id"],
+            data: template["name"],
+            style: {
+              label: {
+                value: template["name"],
+                offset: [0, 20],
+              },
             },
-          },
-        });
+          });
+        }
         edges.push({
           source: nodeToExpand || "",
           target: template["id"],
