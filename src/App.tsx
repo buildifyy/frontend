@@ -181,10 +181,17 @@ const App = () => {
             },
           });
         }
-        edges.push({
-          source: nodeToExpand || "",
-          target: template["id"],
-        });
+        if (
+          initData.edges.findIndex(
+            (edge) =>
+              edge.source === nodeToExpand && edge.target === template["id"]
+          ) === -1
+        ) {
+          edges.push({
+            source: nodeToExpand || "",
+            target: template["id"],
+          });
+        }
       });
 
       setInitData({
@@ -244,7 +251,7 @@ const App = () => {
               )}
             </div>
             Child Relationship:
-            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre">
+            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre-wrap">
               {JSON.stringify(
                 initData.edges.filter((edge) => edge.source === selectedNode),
                 null,
@@ -252,7 +259,7 @@ const App = () => {
               )}
             </div>
             Parent Relationship
-            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre">
+            <div className="rounded-md bg-[#1f1f1f] p-2 whitespace-pre-wrap">
               {JSON.stringify(
                 initData.edges.filter((edge) => edge.target === selectedNode),
                 null,
