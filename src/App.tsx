@@ -12,6 +12,7 @@ import {
 import { GraphinData, IUserEdge, IUserNode } from "@antv/graphin";
 import { Graph } from "./components/graph/Graph";
 import { useEffect, useState } from "react";
+import { Template } from "./types";
 
 const App = () => {
   const { Option } = Select;
@@ -21,7 +22,7 @@ const App = () => {
     edges: [],
   });
   const [openNewNodePopover, setOpenNewNodePopover] = useState<boolean>(false);
-  const [newAdded, setNewAdded] = useState<boolean>(true);
+  const [initOrNewAdded, setInitOrNewAdded] = useState<boolean>(true);
   const [form] = Form.useForm();
   const [nodeToExpand, setNodeToExpand] = useState<string>();
   const [nodeToHide, setNodeToHide] = useState<string>();
@@ -45,47 +46,22 @@ const App = () => {
   const handleSubmit = async () => {
     await form.validateFields();
 
-    const newId = crypto.randomUUID().toString();
     const newLabel = form.getFieldValue("label");
     const newParent = form.getFieldValue("parent");
-    const newTargets = form.getFieldValue("target") as string[];
-    const newEdges: IUserEdge[] = [];
 
-    if (newParent) {
-      newEdges.push({
-        source: newParent,
-        target: newId,
-      });
-    }
-
-    if (newTargets) {
-      newTargets.forEach((targetId) => {
-        newEdges.push({
-          source: newId,
-          target: targetId,
-        });
-      });
-    }
-
-    setInitData({
-      nodes: [
-        ...initData.nodes,
-        {
-          id: newId,
-          label: newLabel,
-          type: "graphin-circle",
-          style: {
-            label: {
-              value: newLabel,
-            },
-          },
-        },
-      ],
-      edges: [...initData.edges, ...newEdges],
-    });
+    await fetch("http://localhost:5127/templates", {
+      method: "post",
+      body: JSON.stringify({
+        name: newLabel,
+        parentId: newParent,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).catch((error) => console.error(error));
 
     form.resetFields();
-    setNewAdded(true);
+    setInitOrNewAdded(true);
     setOpenNewNodePopover(false);
   };
 
@@ -113,17 +89,17 @@ const App = () => {
       transformedData.edges = [...initData.edges];
 
       setInitData(transformedData);
-      setNewAdded(false);
+      setInitOrNewAdded(false);
     };
 
-    if (newAdded) {
+    if (initOrNewAdded) {
       transformData();
     }
-  }, [newAdded, initData]);
+  }, [initOrNewAdded, initData]);
 
   useEffect(() => {
     const transformTemplateToNodeAndEdges = (
-      template: any,
+      template: Template,
       nodes: IUserNode[],
       edges: IUserEdge[]
     ) => {
@@ -157,13 +133,15 @@ const App = () => {
       setInitData({ nodes: nodes, edges: edges });
     };
 
-    fetch("http://localhost:5127/templates?style=tree")
-      .then((res) => res.json())
-      .then((data) => transformData(data));
-  }, []);
+    if (initOrNewAdded) {
+      fetch("http://localhost:5127/templates?style=tree")
+        .then((res) => res.json())
+        .then((data) => transformData(data));
+    }
+  }, [initOrNewAdded]);
 
   useEffect(() => {
-    const expandData = (templates: any[]) => {
+    const expandData = (templates: Template[]) => {
       const nodes: IUserNode[] = [];
       const edges: IUserEdge[] = [];
       templates.forEach((template) => {
@@ -300,7 +278,7 @@ const App = () => {
                   })}
                 </Select>
               </Form.Item>
-              <Form.Item label="Target" name="target" className="mb-2">
+              {/* <Form.Item label="Target" name="target" className="mb-2">
                 <Select mode="multiple" placeholder="Select target node/s">
                   {initData.nodes.map((node) => {
                     return (
@@ -314,7 +292,7 @@ const App = () => {
                     );
                   })}
                 </Select>
-              </Form.Item>
+              </Form.Item> */}
               <div className="flex justify-between mt-4">
                 <Form.Item className="mb-0">
                   <Button
